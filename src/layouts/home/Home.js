@@ -56,7 +56,7 @@ class Home extends Component {
             const nextEpisodePayWei = seriesState.nextEpisodePay[this.nextEpisodePayKey].value;
             const nextEpisodePayEth = this.web3.utils.fromWei(nextEpisodePayWei, "ether");
             nextEpisodePay = nextEpisodePayEth + " ETH";
-            if(this.props.rates['EUR']) {
+            if(this.props.rates && this.props.rates['EUR']) {
                 nextEpisodePay = nextEpisodePay + ' (~' + (this.props.rates['EUR'] * nextEpisodePayEth) + '€)';
             }
         }

@@ -6,8 +6,10 @@ const initialState = {
 
 const updateEthRate = (action, state) => {
     return {
-        ...state.ethRate,
-        [action.fiatSymbol]: action.rate
+        ethRate: {
+            ...state.ethRate,
+            [action.fiatSymbol]: action.rate
+        }
     };
 };
 

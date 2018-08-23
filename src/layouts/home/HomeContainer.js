@@ -16,7 +16,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        onGetEthRate: (fiatSymbol) => {console.log(actions.getEthRate(fiatSymbol)); dispatch(actions.getEthRate(fiatSymbol));}
+        onGetEthRate: (fiatSymbol) => dispatch(actions.getEthRate(fiatSymbol))
     };
 };
 
