@@ -1,6 +1,3 @@
-import ComplexStorage from './../build/contracts/ComplexStorage.json'
-import SimpleStorage from './../build/contracts/SimpleStorage.json'
-import TutorialToken from './../build/contracts/TutorialToken.json'
 import Series from './../build/contracts/Series.json'
 
 const drizzleOptions = {
@@ -12,13 +9,9 @@ const drizzleOptions = {
         }
     },
     contracts: [
-        Series,
-        ComplexStorage,
-        SimpleStorage,
-        TutorialToken
+        Series
     ],
     events: {
-        SimpleStorage: ['StorageSet'],
         Series: ['NewPledger', 'NewPledge', 'NewPublication', 'Withdrawal', 'PledgeInsufficient', 'SeriesClosed']
     },
     polls: {

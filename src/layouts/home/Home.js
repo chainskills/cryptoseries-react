@@ -1,11 +1,20 @@
 import React, {Component} from 'react';
 import {ContractData} from 'drizzle-react-components';
 import PropTypes from 'prop-types';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import './Home.css';
 
 class Home extends Component {
     state = {
         nextEpisodePayFiat: null,
-        pledgeAmount: 0,
+        pledgeAmount: null,
         episodeLink: '',
     };
 
@@ -40,7 +49,7 @@ class Home extends Component {
     onPledgeButtonClicked = () => {
         const pledgeAmountInEth = this.state.pledgeAmount;
         const pledgeAmountInWei = this.web3.utils.toWei("" + pledgeAmountInEth, "ether");
-        this.pledgeId = this.contracts.Series.methods.pledge.cacheSend({value: pledgeAmountInWei, gas:500000});
+        this.pledgeId = this.contracts.Series.methods.pledge.cacheSend({value: pledgeAmountInWei, gas: 500000});
     };
 
     onWithdrawButtonClicked = () => {
@@ -62,12 +71,12 @@ class Home extends Component {
 
     render() {
         const seriesState = this.props.Series;
-        const loading = <span>Loading...</span>;
+        const loading = <CircularProgress/>;
 
         if (this.props.transactionStack && this.props.transactionStack[this.closeId]) {
             const txHash = this.props.transactionStack[this.closeId];
             const closeStatus = this.props.transactions[txHash].status;
-            if(closeStatus === 'success') {
+            if (closeStatus === 'success') {
                 window.location.reload(true);
             }
         }
@@ -79,7 +88,7 @@ class Home extends Component {
         if (this.ownerKey in seriesState.owner) {
             const owner = seriesState.owner[this.ownerKey].value;
             isOwner = owner === this.props.accounts[0];
-            if(owner === undefined) {
+            if (owner === undefined) {
                 closed = true;
             }
         }
@@ -119,6 +128,8 @@ class Home extends Component {
                 nextEpisodePay = nextEpisodePayEth + " ETH";
                 if (this.props.rates && this.props.rates['EUR']) {
                     nextEpisodePay = nextEpisodePay + ' (~' + (this.props.rates['EUR'] * nextEpisodePayEth).toFixed(2) + '€)';
+                } else {
+                    nextEpisodePay = <span>{nextEpisodePay} <CircularProgress size={20}/></span>
                 }
             }
 
@@ -133,6 +144,8 @@ class Home extends Component {
                 yourPledge = yourPledgeEth + " ETH";
                 if (this.props.rates && this.props.rates['EUR']) {
                     yourPledge = yourPledge + ' (~' + (this.props.rates['EUR'] * yourPledgeEth).toFixed(2) + '€)';
+                } else {
+                    yourPledge = <span>{yourPledge} <CircularProgress size={20}/></span>
                 }
 
                 if (this.pledgePerEpisodeKey in seriesState.pledgePerEpisode) {
@@ -141,8 +154,10 @@ class Home extends Component {
                     if (numberOfEpisodes === 0) {
                         numberOfEpisodes = (
                             <span>
-                            {numberOfEpisodes}
-                                <br/>(you should pledge again if you want to support more episodes)
+                            None
+                            <Typography variant="caption">
+                                (you should pledge again if you want to support more episodes)
+                            </Typography>
                             </span>
                         );
                     }
@@ -153,9 +168,9 @@ class Home extends Component {
             if (!isOwner) {
                 yourSupport = (
                     <div>
-                        <h2>Your support</h2>
-                        <p><strong>Your pledge</strong>: {yourPledge}</p>
-                        <p><strong>Number of episodes</strong>: {numberOfEpisodes}</p>
+                        <Typography variant="headline" component="h3" gutterBottom>Your support</Typography>
+                        <Typography paragraph><strong>Your pledge</strong>: {yourPledge}</Typography>
+                        <Typography paragraph><strong>Number of episodes</strong>: {numberOfEpisodes}</Typography>
                     </div>
                 );
             }
@@ -171,20 +186,23 @@ class Home extends Component {
                 let publishStatus = null;
                 if (this.props.transactionStack && this.props.transactionStack[this.publishId]) {
                     const txHash = this.props.transactionStack[this.publishId];
-                    publishStatus = this.props.transactions[txHash].status;
+                    publishStatus = <Typography variant="caption">{this.props.transactions[txHash].status}</Typography>;
                 }
                 buttons = (
-                    <span>
-                        <button onClick={this.onCloseButtonClicked}>Close</button>
-                        &nbsp;
-                        <input type="text" disabled={!publishable} name="episodeLink" value={this.state.episodeLink}
-                               onChange={this.onEpisodeLinkChanged}/>
-                        <button disabled={!publishable} onClick={this.onPublishButtonClicked}>Publish</button>
-                        <br/>
-                        {!publishable ? "You have to wait for " + numberOfBlocksToWait + " blocks before you can publish again." : null}
+                    <CardActions>
+                        <Button color="secondary" size="small" onClick={this.onCloseButtonClicked}>Close</Button>
+                        <TextField value={this.state.episodeLink}
+                                   placeholder="Episode link"
+                                   className="textField"
+                                   onChange={this.onEpisodeLinkChanged}/>
+                        <Button color="primary" size="small" disabled={!publishable}
+                                onClick={this.onPublishButtonClicked}>Publish</Button>
+                        {!publishable ?
+                            <Typography variant="caption">You have to wait for {numberOfBlocksToWait} blocks before you
+                                can publish again.</Typography> : null}
                         <br/>
                         {publishStatus}
-                        </span>
+                    </CardActions>
                 );
             } else {
                 let pledgeStatus = null;
@@ -193,44 +211,58 @@ class Home extends Component {
                     pledgeStatus = this.props.transactions[txHash].status;
                 }
                 buttons = (
-                    <span>
-                        <button disabled={!withdrawable} onClick={this.onWithdrawButtonClicked}>Withdraw</button>
+                    <CardActions>
+                        <Button color="secondary" disabled={!withdrawable}
+                                onClick={this.onWithdrawButtonClicked}>Withdraw</Button>
                         &nbsp;
-                        <input type="text" name="pledgeAmount" onChange={this.onPledgeAmountChanged}
-                               value={this.state.pledgeAmount}/>
-                        <button onClick={this.onPledgeButtonClicked}>Pledge</button>
-                        <br/>
-                        {pledgeStatus}
-                    </span>
+                        <TextField name="pledgeAmount" className="amountField textField" placeholder="Amount to pledge in ETH"
+                                   onChange={this.onPledgeAmountChanged}
+                                   value={this.state.pledgeAmount}/>
+                        <Button color="primary" onClick={this.onPledgeButtonClicked}>Pledge</Button>
+                        <Typography variant="caption">{pledgeStatus}</Typography>
+                    </CardActions>
                 )
             }
 
             content = (
-                <div className="pure-u-1-1">
-                    <h1><ContractData contract="Series" method="title"/></h1>
-                    <h2>Show info</h2>
-                    <p><strong>Minimum publication period</strong>: {minimumPublicationPeriod}</p>
-                    <p><strong>Pledge per episode</strong>: {pledgePerEpisode}</p>
-                    <h2>Supporters</h2>
-                    <p><strong>Active supporters</strong>: {activePledgers}</p>
-                    <p><strong>Followers</strong>: {totalPledgers}</p>
-                    <p><strong>Next episode pay</strong>: {nextEpisodePay}</p>
-                    {yourSupport}
-                    <p>{buttons}</p>
-                </div>
+                <Card className="mainCard">
+                    <CardContent>
+                        <Typography variant="display1" component="h2" gutterBottom>
+                            <ContractData contract="Series" method="title"/>
+                        </Typography>
+                        <Typography variant="headline" component="h3" gutterBottom>Show info</Typography>
+                        <Typography paragraph><strong>Minimum publication period</strong>: {minimumPublicationPeriod}
+                        </Typography>
+                        <Typography paragraph><strong>Pledge per episode</strong>: {pledgePerEpisode}</Typography>
+                        <Typography variant="headline" component="h3" gutterBottom>Supporters</Typography>
+                        <Typography paragraph><strong>Active supporters</strong>: {activePledgers}</Typography>
+                        <Typography paragraph><strong>Followers</strong>: {totalPledgers}</Typography>
+                        <Typography paragraph><strong>Next episode pay</strong>: {nextEpisodePay}</Typography>
+                        {yourSupport}
+                    </CardContent>
+                    {buttons}
+                </Card>
             );
         } else {
-            content = <h1>This show has been cancelled. You cannot support it anymore.</h1>;
+            content = (
+                <Card className="mainCard">
+                    <CardContent>
+                        <Typography variant="display2">This show has been cancelled. You cannot support it
+                            anymore.</Typography>
+                    </CardContent>
+                </Card>
+            );
         }
 
         return (
-            <main className="container">
-                <div className="pure-g">
-                    <div className="pure-u-1-1">
+            <Grid container spacing={16}
+                  direction="row"
+                  justify="center"
+                  alignItems="center">
+                <Grid item xs={6}>
                     {content}
-                    </div>
-                </div>
-            </main>
+                </Grid>
+            </Grid>
         )
     }
 }

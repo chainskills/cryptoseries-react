@@ -1,0 +1,11 @@
+.mainCard {
+    margin-top: 20px;
+}
+
+.amountField input {
+    text-align: right;
+}
+
+.textField {
+    width: 100%;
+}
