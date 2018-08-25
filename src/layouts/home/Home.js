@@ -129,7 +129,7 @@ class Home extends Component {
                 if (this.props.rates && this.props.rates['EUR']) {
                     nextEpisodePay = nextEpisodePay + ' (~' + (this.props.rates['EUR'] * nextEpisodePayEth).toFixed(2) + '€)';
                 } else {
-                    nextEpisodePay = <span>{nextEpisodePay} <CircularProgress size={20}/></span>
+                    nextEpisodePay = <React.Fragment>{nextEpisodePay} <CircularProgress size={20}/></React.Fragment>
                 }
             }
 
@@ -145,7 +145,7 @@ class Home extends Component {
                 if (this.props.rates && this.props.rates['EUR']) {
                     yourPledge = yourPledge + ' (~' + (this.props.rates['EUR'] * yourPledgeEth).toFixed(2) + '€)';
                 } else {
-                    yourPledge = <span>{yourPledge} <CircularProgress size={20}/></span>
+                    yourPledge = <React.Fragment>{yourPledge} <CircularProgress size={20}/></React.Fragment>
                 }
 
                 if (this.pledgePerEpisodeKey in seriesState.pledgePerEpisode) {
@@ -153,12 +153,12 @@ class Home extends Component {
                     numberOfEpisodes = Math.ceil(yourPledgeWei / pledgePerEpisodeWei);
                     if (numberOfEpisodes === 0) {
                         numberOfEpisodes = (
-                            <span>
+                            <React.Fragment>
                             None
                             <Typography variant="caption">
                                 (you should pledge again if you want to support more episodes)
                             </Typography>
-                            </span>
+                            </React.Fragment>
                         );
                     }
                 }
