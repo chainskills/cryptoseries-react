@@ -9,6 +9,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Modal from '@material-ui/core/Modal';
 import './Home.css';
 
 class Home extends Component {
@@ -16,6 +17,8 @@ class Home extends Component {
         nextEpisodePayFiat: null,
         pledgeAmount: null,
         episodeLink: '',
+        withdrawRequested: false,
+        closeRequested: false
     };
 
     constructor(props, context) {
@@ -53,11 +56,11 @@ class Home extends Component {
     };
 
     onWithdrawButtonClicked = () => {
-        this.withdrawId = this.contracts.Series.methods.withdraw.cacheSend({gas: 500000});
+        this.setState({withdrawRequested: true});
     };
 
     onCloseButtonClicked = () => {
-        this.closeId = this.contracts.Series.methods.close.cacheSend({gas: 500000});
+        this.setState({closeRequested: true});
     };
 
     onEpisodeLinkChanged = (event) => {
@@ -67,6 +70,24 @@ class Home extends Component {
     onPublishButtonClicked = () => {
         const episodeLink = this.state.episodeLink;
         this.publishId = this.contracts.Series.methods.publish.cacheSend(episodeLink, {gas: 500000});
+    };
+
+    onCancelWithdraw = () => {
+        this.setState({withdrawRequested: false});
+    };
+
+    onConfirmWithdraw = () => {
+        this.withdrawId = this.contracts.Series.methods.withdraw.cacheSend({gas: 500000});
+        this.setState({withdrawRequested: false});
+    };
+
+    onCancelClose = () => {
+        this.setState({closeRequested: false});
+    };
+
+    onConfirmClose = () => {
+        this.closeId = this.contracts.Series.methods.close.cacheSend({gas: 500000});
+        this.setState({closeRequested: false});
     };
 
     render() {
@@ -154,10 +175,10 @@ class Home extends Component {
                     if (numberOfEpisodes === 0) {
                         numberOfEpisodes = (
                             <React.Fragment>
-                            None
-                            <Typography variant="caption">
-                                (you should pledge again if you want to support more episodes)
-                            </Typography>
+                                None
+                                <Typography variant="caption">
+                                    (you should pledge again if you want to support more episodes)
+                                </Typography>
                             </React.Fragment>
                         );
                     }
@@ -215,7 +236,8 @@ class Home extends Component {
                         <Button color="secondary" disabled={!withdrawable}
                                 onClick={this.onWithdrawButtonClicked}>Withdraw</Button>
                         &nbsp;
-                        <TextField name="pledgeAmount" className="amountField textField" placeholder="Amount to pledge in ETH"
+                        <TextField name="pledgeAmount" className="amountField textField"
+                                   placeholder="Amount to pledge in ETH"
                                    onChange={this.onPledgeAmountChanged}
                                    value={this.state.pledgeAmount}/>
                         <Button color="primary" onClick={this.onPledgeButtonClicked}>Pledge</Button>
@@ -255,14 +277,59 @@ class Home extends Component {
         }
 
         return (
-            <Grid container spacing={16}
-                  direction="row"
-                  justify="center"
-                  alignItems="center">
-                <Grid item xs={6}>
-                    {content}
+            <React.Fragment>
+                <Grid container spacing={16}
+                      direction="row"
+                      justify="center"
+                      alignItems="center">
+                    <Grid item xs={6}>
+                        {content}
+                    </Grid>
                 </Grid>
-            </Grid>
+                <Modal
+                    aria-labelledby="withdraw-modal-title"
+                    aria-describedby="withdraw-modal-description"
+                    open={this.state.withdrawRequested}
+                    onClose={this.onCancelWithdraw}>
+                    <div className="modal">
+                        <Typography variant="title" id="withdraw-modal-title">
+                            Are you sure you want to withdraw your pledge?
+                        </Typography>
+                        <Typography variant="subheading" id="withdraw-modal-description">
+                            <p>If you withdraw your pledge, you will get all of it back (minus the fees for this
+                                transaction of course), but you will no longer support new episodes of this show.</p>
+                            <p>Are you sure you want to withdraw?</p>
+                        </Typography>
+                        <div className="buttonBar">
+                            <Button variant="raised" color="secondary"
+                                                           onClick={this.onCancelWithdraw}>Cancel</Button>
+                            &nbsp;
+                            <Button variant="raised" color="primary" onClick={this.onConfirmWithdraw}>Give me my money
+                                back</Button>
+                        </div>
+                    </div>
+                </Modal>
+                <Modal
+                    aria-labelledby="close-modal-title"
+                    aria-describedby="close-modal-description"
+                    open={this.state.closeRequested}
+                    onClose={this.onCancelClose}>
+                    <div className="modal">
+                        <Typography variant="title" id="close-modal-title">
+                            Are you sure you want to close this show?
+                        </Typography>
+                        <Typography variant="subheading" id="withdraw-modal-description" component="p">
+                            If you close this show, all the pledges will be sent back to your pledgers and this contract will be disabled, making it impossible for people to contribute to it again.
+                        </Typography>
+                        <div className="buttonBar">
+                            <Button variant="raised" color="secondary"
+                                    onClick={this.onCancelClose}>Cancel</Button>
+                            &nbsp;
+                            <Button variant="raised" color="primary" onClick={this.onConfirmClose}>Close the show</Button>
+                        </div>
+                    </div>
+                </Modal>
+            </React.Fragment>
         )
     }
 }

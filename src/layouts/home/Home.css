@@ -9,3 +9,14 @@
 .textField {
     width: 100%;
 }
+
+.modal {
+    width: 60%;
+    background-color: white;
+    padding: 20px;
+    margin: 20% auto auto;
+}
+
+.buttonBar {
+    text-align: right;
+}
