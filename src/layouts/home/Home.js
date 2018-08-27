@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, Fragment} from 'react';
 import {ContractData} from 'drizzle-react-components';
 import PropTypes from 'prop-types';
 import Card from '@material-ui/core/Card';
@@ -150,7 +150,7 @@ class Home extends Component {
                 if (this.props.rates && this.props.rates['EUR']) {
                     nextEpisodePay = nextEpisodePay + ' (~' + (this.props.rates['EUR'] * nextEpisodePayEth).toFixed(2) + '€)';
                 } else {
-                    nextEpisodePay = <React.Fragment>{nextEpisodePay} <CircularProgress size={20}/></React.Fragment>
+                    nextEpisodePay = <Fragment>{nextEpisodePay} <CircularProgress size={20}/></Fragment>
                 }
             }
 
@@ -166,7 +166,7 @@ class Home extends Component {
                 if (this.props.rates && this.props.rates['EUR']) {
                     yourPledge = yourPledge + ' (~' + (this.props.rates['EUR'] * yourPledgeEth).toFixed(2) + '€)';
                 } else {
-                    yourPledge = <React.Fragment>{yourPledge} <CircularProgress size={20}/></React.Fragment>
+                    yourPledge = <Fragment>{yourPledge} <CircularProgress size={20}/></Fragment>
                 }
 
                 if (this.pledgePerEpisodeKey in seriesState.pledgePerEpisode) {
@@ -174,12 +174,12 @@ class Home extends Component {
                     numberOfEpisodes = Math.ceil(yourPledgeWei / pledgePerEpisodeWei);
                     if (numberOfEpisodes === 0) {
                         numberOfEpisodes = (
-                            <React.Fragment>
+                            <Fragment>
                                 None
                                 <Typography variant="caption">
                                     (you should pledge again if you want to support more episodes)
                                 </Typography>
-                            </React.Fragment>
+                            </Fragment>
                         );
                     }
                 }
@@ -277,7 +277,7 @@ class Home extends Component {
         }
 
         return (
-            <React.Fragment>
+            <Fragment>
                 <Grid container spacing={16}
                       direction="row"
                       justify="center"
@@ -329,7 +329,7 @@ class Home extends Component {
                         </div>
                     </div>
                 </Modal>
-            </React.Fragment>
+            </Fragment>
         )
     }
 }
