@@ -205,18 +205,46 @@ class Home extends Component {
 
             if (isOwner) {
                 let publishStatus = null;
+                let publishPending = false;
                 if (this.props.transactionStack && this.props.transactionStack[this.publishId]) {
                     const txHash = this.props.transactionStack[this.publishId];
-                    publishStatus = <Typography variant="caption">{this.props.transactions[txHash].status}</Typography>;
+                    const status = this.props.transactions[txHash].status;
+                    if(status === 'pending') {
+                        publishPending = true;
+                        publishStatus = <CircularProgress size={20}/>
+                    } else if(status === 'error') {
+                        publishStatus = <Typography variant="caption" color="error">{this.props.transactions[txHash].error}</Typography>;
+                    } else if(status === 'success') {
+                        publishStatus = null;
+                    }
+                }
+                let closeStatus = null;
+                let closeDisabled = false;
+                if (this.props.transactionStack && this.props.transactionStack[this.closeId]) {
+                    const txHash = this.props.transactionStack[this.closeId];
+                    const status = this.props.transactions[txHash].status;
+                    if(status === 'pending') {
+                        closeDisabled = true;
+                        closeStatus = <CircularProgress size={20}/>
+                    } else if(status === 'error') {
+                        closeStatus = <Typography variant="caption" color="error">{this.props.transactions[txHash].error}</Typography>;
+                    } else if(status === 'success') {
+                        closeStatus = null;
+                    }
                 }
                 buttons = (
                     <CardActions>
-                        <Button color="secondary" size="small" onClick={this.onCloseButtonClicked}>Close</Button>
+                        <Button
+                            color="secondary"
+                            size="small"
+                            disabled={closeDisabled}
+                            onClick={this.onCloseButtonClicked}>Close</Button>
+                        {closeStatus}
                         <TextField value={this.state.episodeLink}
                                    placeholder="Episode link"
                                    className="textField"
                                    onChange={this.onEpisodeLinkChanged}/>
-                        <Button color="primary" size="small" disabled={!publishable}
+                        <Button color="primary" size="small" disabled={!publishable || publishPending}
                                 onClick={this.onPublishButtonClicked}>Publish</Button>
                         {!publishable ?
                             <Typography variant="caption">You have to wait for {numberOfBlocksToWait} blocks before you
@@ -227,21 +255,43 @@ class Home extends Component {
                 );
             } else {
                 let pledgeStatus = null;
+                let pledgeDisabled = false;
                 if (this.props.transactionStack && this.props.transactionStack[this.pledgeId]) {
                     const txHash = this.props.transactionStack[this.pledgeId];
-                    pledgeStatus = this.props.transactions[txHash].status;
+                    const status = this.props.transactions[txHash].status;
+                    if(status === 'pending') {
+                        pledgeStatus = <CircularProgress size={20}/>;
+                        pledgeDisabled = true;
+                    } else if(status === 'success') {
+                        pledgeStatus = null;
+                    } else if(status === 'error') {
+                        pledgeStatus = <Typography variant="caption">{this.props.transactions[txHash].error}</Typography>;
+                    }
+                }
+                let withdrawStatus = null;
+                if (this.props.transactionStack && this.props.transactionStack[this.withdrawId]) {
+                    const txHash = this.props.transactionStack[this.withdrawId];
+                    const status = this.props.transactions[txHash].status;
+                    if(status === 'pending') {
+                        withdrawStatus = <CircularProgress size={20}/>;
+                        withdrawable = false;
+                    } else if(status === 'success') {
+                        withdrawStatus = null;
+                    } else if(status === 'error') {
+                        withdrawStatus = <Typography variant="caption">{this.props.transactions[txHash].error}</Typography>;
+                    }
                 }
                 buttons = (
                     <CardActions>
                         <Button color="secondary" disabled={!withdrawable}
                                 onClick={this.onWithdrawButtonClicked}>Withdraw</Button>
-                        &nbsp;
+                        {withdrawStatus}
                         <TextField name="pledgeAmount" className="amountField textField"
                                    placeholder="Amount to pledge in ETH"
                                    onChange={this.onPledgeAmountChanged}
                                    value={this.state.pledgeAmount}/>
-                        <Button color="primary" onClick={this.onPledgeButtonClicked}>Pledge</Button>
-                        <Typography variant="caption">{pledgeStatus}</Typography>
+                        <Button color="primary" onClick={this.onPledgeButtonClicked} disabled={pledgeDisabled}>Pledge</Button>
+                        {pledgeStatus}
                     </CardActions>
                 )
             }
