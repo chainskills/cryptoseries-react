@@ -8,6 +8,12 @@ contract Series is Ownable {
 
     //title of the series
     string public title;
+    //description of the series
+    string public description;
+    //perks for contributors
+    string public perks;
+    //link to access the series
+    string public link;
     //amount that the owner will receive from each pledger for each episode
     uint public pledgePerEpisode;
     //periodicity of episodes, in number of blocks
@@ -60,17 +66,35 @@ contract Series is Ownable {
     * @param balanceBeforeClose Balance of the contract at the moment of closing
     */
     event SeriesClosed(uint balanceBeforeClose);
+    /*
+    * Emitted when the owner modifies the perks, to give contributors a chance to review the changes and react accordingly
+    * @param oldPerks Perks as they were before the change
+    * @param newPerks Perks as they are after the change
+    */
+    event PerksChanged(string oldPerks, string newPerks);
+    /*
+    * Emitted when the owner modifies the link of the series, to give contributors a chance to review the changes and react accordingly
+    * @param oldLink Link as it was before the change
+    * @param newLink Link as it is after the change
+    */
+    event LinkChanged(string oldLink, string newLink);
 
     /*
     * Configures the series parameters
-    * @param title Title of the series
-    * @param pledgePerEpisode Amount the owner will receive for each episode from each pledger
-    * @param minimumPublicationPeriod Number of blocks the owner will have to wait between 2 publications
+    * @param _title Title of the series
+    * @param _pledgePerEpisode Amount the owner will receive for each episode from each pledger
+    * @param _minimumPublicationPeriod Number of blocks the owner will have to wait between 2 publications
+    * @param _description Description of the show
+    * @param _perks Benefits contributors get in exchange for their contribution
+    * @param _link General link to access the show
     */
-    constructor(string _title, uint _pledgePerEpisode, uint _minimumPublicationPeriod) public {
+    constructor(string _title, uint _pledgePerEpisode, uint _minimumPublicationPeriod, string _description, string _perks, string _link) public {
         title = _title;
         pledgePerEpisode = _pledgePerEpisode;
         minimumPublicationPeriod = _minimumPublicationPeriod;
+        description = _description;
+        perks = _perks;
+        link = _link;
     }
 
     /**
@@ -210,5 +234,27 @@ contract Series is Ownable {
         } else {
             return lastPublicationBlock + minimumPublicationPeriod - block.number;
         }
+    }
+
+    /*
+    * Lets the owner update the perks of the show, which explains what contributors get
+    * @param _perks New message explaining what contributors get
+    */
+    function setPerks(string _perks) public onlyOwner {
+        require(bytes(_perks).length > 0, "Perks cannot be empty");
+        string memory oldPerks = perks;
+        perks = _perks;
+        emit PerksChanged(oldPerks, _perks);
+    }
+
+    /*
+    * Lets the owner update the general link of the show
+    * @param _link New general link for the show
+    */
+    function setLink(string _link) public onlyOwner {
+        require(bytes(_link).length > 0, "Link must be specified");
+        string memory oldLink = link;
+        link = _link;
+        emit LinkChanged(oldLink, _link);
     }
 }

@@ -10,6 +10,8 @@ import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Modal from '@material-ui/core/Modal';
+import Icon from '@material-ui/core/Icon';
+import IconButton from '@material-ui/core/IconButton';
 import './Home.css';
 
 class Home extends Component {
@@ -18,7 +20,11 @@ class Home extends Component {
         pledgeAmount: null,
         episodeLink: '',
         withdrawRequested: false,
-        closeRequested: false
+        closeRequested: false,
+        editingLink: false,
+        editingPerks: false,
+        link: '',
+        perks: ''
     };
 
     constructor(props, context) {
@@ -37,6 +43,8 @@ class Home extends Component {
         this.yourPledgeKey = this.seriesContract.methods.pledges.cacheCall(this.props.accounts[0]);
         this.ownerKey = this.seriesContract.methods.owner.cacheCall();
         this.numberOfBlocksToWaitKey = this.seriesContract.methods.numberOfBlocksToWaitBeforeNextPublish.cacheCall();
+        this.showLinkKey = this.seriesContract.methods.link.cacheCall();
+        this.showPerksKey = this.seriesContract.methods.perks.cacheCall();
     }
 
     componentDidMount() {
@@ -88,6 +96,44 @@ class Home extends Component {
     onConfirmClose = () => {
         this.closeId = this.contracts.Series.methods.close.cacheSend({gas: 500000});
         this.setState({closeRequested: false});
+    };
+
+    onEditLink = () => {
+        const seriesState = this.props.Series;
+        if(this.state.editingLink) {
+            this.setLinkId = this.contracts.Series.methods.setLink.cacheSend(this.state.link, {gas: 500000});
+            this.setState({editingLink: false, link: ''});
+        } else {
+            if(this.showLinkKey in seriesState.link) {
+                this.setState({
+                    editingLink: true,
+                    link: seriesState.link[this.showLinkKey].value
+                });
+            }
+        }
+    };
+
+    onChangeLink = (event) => {
+        this.setState({link: event.target.value});
+    };
+
+    onEditPerks = () => {
+        if(this.state.editingPerks) {
+            this.setPerksId = this.contracts.Series.methods.setPerks.cacheSend(this.state.perks, {gas: 500000});
+            this.setState({editingPerks: false, perks: ''});
+        } else {
+            const seriesState = this.props.Series;
+            if(this.showPerksKey in seriesState.perks) {
+                this.setState({
+                    editingPerks: true,
+                    perks: seriesState.perks[this.showPerksKey].value
+                });
+            }
+        }
+    };
+
+    onChangePerks = (event) => {
+        this.setState({perks: event.target.value});
     };
 
     render() {
@@ -186,7 +232,9 @@ class Home extends Component {
             }
 
             let yourSupport = null;
-            if (!isOwner) {
+            let editPerksButton = null;
+            let editLinkButton = null;
+            if(!isOwner) {
                 yourSupport = (
                     <div>
                         <Typography variant="headline" component="h3" gutterBottom>Your support</Typography>
@@ -203,7 +251,28 @@ class Home extends Component {
                 publishable = +numberOfBlocksToWait === 0;
             }
 
+            let disableEditPerks = false;
+            let disableEditLink = false;
             if (isOwner) {
+                if(this.setPerksId !== undefined) {
+                    const editPerksTxHash = this.props.transactionStack[this.setPerksId];
+                    const editPerkStatus = editPerksTxHash !== undefined ? this.props.transactions[editPerksTxHash].status : 'pending';
+                    if(editPerkStatus === 'pending') {
+                        disableEditPerks = true;
+                    }
+                }
+                editPerksButton = <span>&nbsp;<IconButton disabled={disableEditPerks} onClick={this.onEditPerks}><Icon>{this.state.editingPerks ? "save" : "edit"}</Icon></IconButton></span>;
+
+
+                if(this.setLinkId !== undefined) {
+                    const editLinkTxHash = this.props.transactionStack[this.setLinkId];
+                    const editLinkStatus = editLinkTxHash !== undefined ? this.props.transactions[editLinkTxHash].status : 'pending';
+                    if(editLinkStatus === 'pending') {
+                        disableEditLink = true;
+                    }
+                }
+                editLinkButton = <span>&nbsp;<IconButton disabled={disableEditLink} onClick={this.onEditLink}><Icon>{this.state.editingLink ? "save" : "edit"}</Icon></IconButton></span>;
+
                 let publishStatus = null;
                 let publishPending = false;
                 if (this.props.transactionStack && this.props.transactionStack[this.publishId]) {
@@ -296,6 +365,52 @@ class Home extends Component {
                 )
             }
 
+            let showLink = <CircularProgress size={20}/>;
+            if(this.showLinkKey in seriesState.link) {
+                showLink = <a href={seriesState.link[this.showLinkKey].value}>{seriesState.link[this.showLinkKey].value}</a>;
+                if(this.state.editingLink) {
+                    showLink = <TextField type="url" cols={80} placeholder="Link" value={this.state.link} onChange={this.onChangeLink}/>
+                } else if(disableEditLink) {
+                    showLink = <CircularProgress size={20}/>
+                }
+            }
+
+            let showPerks = <CircularProgress size={20}/>;
+            if(this.showPerksKey in seriesState.perks) {
+                showPerks = <Typography paragraph>{seriesState.perks[this.showPerksKey].value}</Typography>;
+                if(this.state.editingPerks) {
+                    showPerks = <TextField multiline cols={80} rows={5} value={this.state.perks} onChange={this.onChangePerks}/>;
+                } else if(disableEditPerks) {
+                    showPerks = <CircularProgress size={20}/>
+                }
+            }
+
+            let episodes = null;
+            let episodeData = [
+                {
+                    id: 1,
+                    link: "http://media.blubrry.com/proofofcast/p/content.blubrry.com/proofofcast/001_mixdown.mp3"
+                },
+                {
+                    id: 2,
+                    link: "http://media.blubrry.com/proofofcast/p/content.blubrry.com/proofofcast/proofofcast_002.mp3"
+                },
+                {
+                    id: 3,
+                    link: "http://media.blubrry.com/proofofcast/p/content.blubrry.com/proofofcast/proofofcast_003.mp3"
+                }
+            ];
+            episodes = episodeData.map((item, index) => {
+                return (
+                    <div>
+                        <audio controls>
+                            <source src={item.link} type="audio/mp3"/>
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                );
+            });
+
             content = (
                 <Card className="mainCard">
                     <CardContent>
@@ -303,14 +418,25 @@ class Home extends Component {
                             <ContractData contract="Series" method="title"/>
                         </Typography>
                         <Typography variant="headline" component="h3" gutterBottom>Show info</Typography>
-                        <Typography paragraph><strong>Minimum publication period</strong>: {minimumPublicationPeriod}
+                        <Typography variant="subheading" component="h4">Description</Typography>
+                        <Typography paragraph>
+                            <ContractData contract="Series" method="description"/>
                         </Typography>
-                        <Typography paragraph><strong>Pledge per episode</strong>: {pledgePerEpisode}</Typography>
+                        <Typography variant="subheading" component="h4">Perks for contributors{editPerksButton}</Typography>
+                        <Typography paragraph>{showPerks}</Typography>
+                        <Typography variant="subheading" component="h4">Show Link{editLinkButton}</Typography>
+                        <Typography paragraph>{showLink}</Typography>
+                        <Typography variant="subheading" component="h4">Minimum publication period</Typography>
+                        <Typography paragraph>{minimumPublicationPeriod}</Typography>
+                        <Typography variant="subheading" component="h4">Pledge per episode</Typography>
+                        <Typography paragraph>{pledgePerEpisode}</Typography>
                         <Typography variant="headline" component="h3" gutterBottom>Supporters</Typography>
                         <Typography paragraph><strong>Active supporters</strong>: {activePledgers}</Typography>
                         <Typography paragraph><strong>Followers</strong>: {totalPledgers}</Typography>
                         <Typography paragraph><strong>Next episode pay</strong>: {nextEpisodePay}</Typography>
                         {yourSupport}
+                        <Typography variant="headline">Episodes</Typography>
+                        {episodes}
                     </CardContent>
                     {buttons}
                 </Card>
